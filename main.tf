@@ -54,4 +54,63 @@ resource "aws_route_table_association" "rta" {
 
 # ---------------- Security Group ----------------
 resource "aws_security_group" "allow_ssh" {
-  vpc_id = aws_vpc
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    description = "Allow SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]   # ⚠️ For production restrict to your IP
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "allow_ssh"
+  }
+}
+
+# ---------------- Latest Amazon Linux 2 AMI ----------------
+data "aws_ami" "amzlinux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
+# ---------------- EC2 Instance ----------------
+resource "aws_instance" "my_ec2" {
+  ami                         = data.aws_ami.amzlinux.id
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet.id
+  vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
+  key_name                    = "sasich"
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "my_ec2_instance"
+  }
+}
+
+# ---------------- Outputs ----------------
+output "ec2_public_ip" {
+  value = aws_instance.my_ec2.public_ip
+}
+
+output "ec2_instance_id" {
+  value = aws_instance.my_ec2.id
+}
