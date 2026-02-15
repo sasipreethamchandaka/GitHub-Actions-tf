@@ -94,7 +94,7 @@ data "aws_ami" "amzlinux" {
 
 # ---------------- EC2 Instance ----------------
 resource "aws_instance" "my_ec2" {
-  ami                         = data.aws_ami.amzlinux.id
+  ami                         = "ami-068c0051b15cdb816"
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.public_subnet.id
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
