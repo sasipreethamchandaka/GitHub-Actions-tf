@@ -1,34 +1,9 @@
-terraform {
-  required_version = ">= 1.0.0"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-    local = {
-      source  = "hashicorp/local"
-      version = "~> 2.0"
-    }
-  }
-}
-
-# ---------------- Provider ----------------
-provider "aws" {
-  region = "us-east-1"
-}
-
 # ---------------- Key Pair Creation ----------------
-# 1. Generate an RSA private key
 resource "tls_private_key" "rsa_key" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-# 2. Upload public key to AWS
 resource "aws_key_pair" "sasich_key" {
   key_name   = "sasich"
   public_key = tls_private_key.rsa_key.public_key_openssh
@@ -38,7 +13,6 @@ resource "aws_key_pair" "sasich_key" {
   }
 }
 
-# 3. Save private key locally to sasich.pem
 resource "local_file" "private_key" {
   content         = tls_private_key.rsa_key.private_key_pem
   filename        = "${path.module}/sasich.pem"
